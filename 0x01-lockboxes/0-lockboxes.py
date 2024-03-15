@@ -16,24 +16,25 @@ def canUnlockAll(boxes):
     Returns:
         bool: True if all boxes can be opened, False otherwise.
     """
-    if not boxes:
-        return False
+    length = len(boxes)
+    keys = set()
+    opened_boxes = []
+    i = 0
 
-    keys = set(boxes[0])
+    while i < length:
+        oldi = i
+        opened_boxes.append(i)
+        keys.update(boxes[i])
+        for key in keys:
+            if key != 0 and key < length and key not in opened_boxes:
+                i = key
+                break
+        if oldi != i:
+            continue
+        else:
+            break
 
-    for i in range(1, len(boxes)):
-        if i in keys:
-            keys.update(boxes[i])
-
-    return len(keys) == len(boxes)
-
-
-if __name__ == "__main__":
-    boxes = [[1], [2], [3], [4], []]
-    print(canUnlockAll(boxes))
-
-    boxes = [[1, 4, 6], [2], [0, 4, 1], [5, 6, 2], [3], [4, 1], [6]]
-    print(canUnlockAll(boxes))
-
-    boxes = [[1, 4], [2], [0, 4, 1], [3], [], [4, 1], [5, 6]]
-    print(canUnlockAll(boxes))
+    for i in range(length):
+        if i not in opened_boxes and i != 0:
+            return False
+    return True
