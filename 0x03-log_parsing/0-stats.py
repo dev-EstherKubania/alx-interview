@@ -1,39 +1,54 @@
 #!/usr/bin/python3
 """
-Script that reads stdin line by line and computes metrics
+Script that reads stdin line by line and computes metrics:
 """
 
 import sys
+import signal
 
-if __name__ == '__main__':
 
-    filesize, count = 0, 0
-    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
-    stats = {k: 0 for k in codes}
+def print_stats(total_size, status_codes):
+    """
+    Print the computed statistics.
 
-    def print_stats(stats: dict, file_size: int) -> None:
-        print("File size: {:d}".format(filesize))
-        for k, v in sorted(stats.items()):
-            if v:
-                print("{}: {}".format(k, v))
+    Args:
+        total_size (int): Total file size.
+        status_codes (dict): Dictionary containing the count of lines for each status code.
+    """
+    print("File size: {}".format(total_size))
+    for code, count in sorted(status_codes.items()):
+        if count > 0:
+            print("{}: {}".format(code, count))
 
-    try:
-        for line in sys.stdin:
-            count += 1
-            data = line.split()
-            try:
-                status_code = data[-2]
-                if status_code in stats:
-                    stats[status_code] += 1
-            except BaseException:
-                pass
-            try:
-                filesize += int(data[-1])
-            except BaseException:
-                pass
-            if count % 10 == 0:
-                print_stats(stats, filesize)
-        print_stats(stats, filesize)
-    except KeyboardInterrupt:
-        print_stats(stats, filesize)
-        raise
+def signal_handler(sig, frame):
+    """
+    Handler for SIGINT signal (Ctrl+C).
+    Prints the statistics and exits gracefully.
+    """
+    print_stats(total_size, status_codes)
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+total_size = 0
+status_codes = {'200': 0, '301': 0, '400': 0, '401': 0, '403': 0, '404': 0, '405': 0, '500': 0}
+line_count = 0
+
+try:
+    for line in sys.stdin:
+        try:
+            parts = line.split()
+            size = int(parts[-1])
+            status_code = parts[-2]
+            if status_code in status_codes:
+                status_codes[status_code] += 1
+            total_size += size
+            line_count += 1
+            if line_count == 10:
+                print_stats(total_size, status_codes)
+                line_count = 0
+        except ValueError:
+            pass
+except KeyboardInterrupt:
+    print_stats(total_size, status_codes)
+    sys.exit(0)
