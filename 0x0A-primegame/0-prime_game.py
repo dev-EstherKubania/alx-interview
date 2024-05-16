@@ -16,7 +16,7 @@ def isWinner(x, nums):
     for i, is_prime in enumerate(primes, 1):
         if i == 1 or not is_prime:
             continue
-        for m in range(m + i, n + 1, i):
+        for m in range(i + i, n + 1, i):
             primes[m - 1] = False
     # filter the number of primes less than n 
     for _, n in zip(range(x), nums):
